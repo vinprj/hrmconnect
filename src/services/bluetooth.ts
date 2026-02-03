@@ -42,6 +42,7 @@ export class BluetoothService {
   private onDataReceived: (data: HeartRateData) => void;
   private onDisconnected: () => void;
   private onBatteryLevel?: (level: number) => void;
+  private additionalDataListeners: Set<(data: HeartRateData) => void> = new Set();
 
   /**
    * Creates a new BluetoothService instance.
@@ -57,6 +58,23 @@ export class BluetoothService {
     this.onDataReceived = onDataReceived;
     this.onDisconnected = onDisconnected;
     this.onBatteryLevel = onBatteryLevel;
+  }
+
+  /**
+   * Adds an additional data listener. Useful for components that need to
+   * subscribe to heart rate data temporarily (e.g., Morning Test).
+   * @param listener - Callback to receive heart rate data
+   */
+  addDataListener(listener: (data: HeartRateData) => void): void {
+    this.additionalDataListeners.add(listener);
+  }
+
+  /**
+   * Removes a previously added data listener.
+   * @param listener - The listener to remove
+   */
+  removeDataListener(listener: (data: HeartRateData) => void): void {
+    this.additionalDataListeners.delete(listener);
   }
 
   /**
@@ -168,6 +186,8 @@ export class BluetoothService {
     if (value) {
       const data = this.parseHeartRate(value);
       this.onDataReceived(data);
+      // Notify additional listeners (e.g., Morning Test component)
+      this.additionalDataListeners.forEach(listener => listener(data));
     }
   }
 
