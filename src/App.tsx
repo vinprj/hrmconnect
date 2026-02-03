@@ -15,7 +15,8 @@ import { SessionHistory } from './components/SessionHistory'
 import { BreathingGuide } from './components/BreathingGuide'
 import { ReadinessCard } from './components/ReadinessCard'
 import { saveSession } from './services/storage'
-import { Activity, Timer, AlertTriangle, RotateCcw, Power, Battery, Sun, Moon, HelpCircle, History, Save } from 'lucide-react'
+import { Activity, Timer, AlertTriangle, RotateCcw, Power, Battery, Sun, Moon, HelpCircle, History, Save, Sunrise } from 'lucide-react'
+import { MorningTest } from './components/MorningTest'
 import { ZoneIndicator } from './components/ZoneIndicator'
 import { DEFAULT_AGE } from './utils/zones'
 import { motion } from 'framer-motion'
@@ -80,6 +81,7 @@ function App() {
   })
   const [isTutorialOpen, setIsTutorialOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [isMorningTestOpen, setIsMorningTestOpen] = useState(false)
   const [sessionStartTime, setSessionStartTime] = useState<number>(0)
   const [hrDataWithTimestamp, setHrDataWithTimestamp] = useState<{ time: number; hr: number }[]>([])
   const [userAge, setUserAge] = useState<number>(() => {
@@ -224,6 +226,8 @@ function App() {
   const closeTutorial = useCallback(() => setIsTutorialOpen(false), [])
   const openHistory = useCallback(() => setIsHistoryOpen(true), [])
   const closeHistory = useCallback(() => setIsHistoryOpen(false), [])
+  const openMorningTest = useCallback(() => setIsMorningTestOpen(true), [])
+  const closeMorningTest = useCallback(() => setIsMorningTestOpen(false), [])
   const saveAndDisconnect = useCallback(() => disconnect(true), [disconnect])
   const endWithoutSave = useCallback(() => disconnect(false), [disconnect])
 
@@ -288,6 +292,9 @@ function App() {
             )}
 
             <div className="header-actions">
+              <button onClick={openMorningTest} className="icon-btn" title="Morning Readiness Test">
+                <Sunrise size={20} />
+              </button>
               <button onClick={openHistory} className="icon-btn" title="Session History">
                 <History size={20} />
               </button>
@@ -304,6 +311,13 @@ function App() {
 
       <TutorialModal isOpen={isTutorialOpen} onClose={closeTutorial} />
       <SessionHistory isOpen={isHistoryOpen} onClose={closeHistory} />
+      <MorningTest
+        isOpen={isMorningTestOpen}
+        onClose={closeMorningTest}
+        bluetoothService={bluetoothRef.current}
+        isConnected={isConnected}
+        onConnect={connect}
+      />
 
       {
         error && (

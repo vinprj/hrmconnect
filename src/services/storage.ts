@@ -34,6 +34,30 @@ export interface Session {
     stats: SessionStats;
     /** Advanced analytics (stress index, frequency domain) */
     advancedStats: AdvancedStats;
+    /** Type of session - regular monitoring or morning test */
+    testType?: 'regular' | 'morning';
+}
+
+/**
+ * Results from a Morning Readiness Test (orthostatic test).
+ */
+export interface MorningTestResult {
+    /** Unique identifier */
+    id?: string;
+    /** Unix timestamp when test was taken */
+    timestamp: number;
+    /** Average heart rate while lying down */
+    lyingAvgHr: number;
+    /** Average heart rate while standing */
+    standingAvgHr: number;
+    /** Difference between standing and lying HR */
+    hrDelta: number;
+    /** RMSSD while lying down (parasympathetic activity) */
+    lyingRMSSD: number;
+    /** RMSSD while standing */
+    standingRMSSD: number;
+    /** Calculated readiness score (0-100) */
+    readinessScore: number;
 }
 
 interface HRMConnectDB extends DBSchema {
@@ -42,6 +66,11 @@ interface HRMConnectDB extends DBSchema {
         value: Session;
         indexes: { 'by-start-time': number };
     };
+    morningTests: {
+        key: string;
+        value: MorningTestResult;
+        indexes: { 'by-timestamp': number };
+    };
     settings: {
         key: string;
         value: unknown;
@@ -49,7 +78,7 @@ interface HRMConnectDB extends DBSchema {
 }
 
 const DB_NAME = 'hrm-connect';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbPromise: Promise<IDBPDatabase<HRMConnectDB>> | null = null;
 
@@ -61,6 +90,11 @@ function getDB(): Promise<IDBPDatabase<HRMConnectDB>> {
                 if (!db.objectStoreNames.contains('sessions')) {
                     const sessionStore = db.createObjectStore('sessions', { keyPath: 'id' });
                     sessionStore.createIndex('by-start-time', 'startTime');
+                }
+                // Morning tests store
+                if (!db.objectStoreNames.contains('morningTests')) {
+                    const morningStore = db.createObjectStore('morningTests', { keyPath: 'id' });
+                    morningStore.createIndex('by-timestamp', 'timestamp');
                 }
                 // Settings store
                 if (!db.objectStoreNames.contains('settings')) {
@@ -125,6 +159,50 @@ export async function deleteSession(id: string): Promise<void> {
 export async function clearAllSessions(): Promise<void> {
     const db = await getDB();
     await db.clear('sessions');
+}
+
+// Morning Test Operations
+
+/**
+ * Saves a morning test result to the database.
+ * @param result - Morning test result data
+ * @returns The generated test ID
+ */
+export async function saveMorningTest(result: Omit<MorningTestResult, 'id'>): Promise<string> {
+    const db = await getDB();
+    const id = generateId();
+    const fullResult: MorningTestResult = { ...result, id };
+    await db.put('morningTests', fullResult);
+    return id;
+}
+
+/**
+ * Retrieves all morning test results, sorted by most recent first.
+ * @returns Array of morning test results ordered by timestamp (descending)
+ */
+export async function getMorningTests(): Promise<MorningTestResult[]> {
+    const db = await getDB();
+    const tests = await db.getAllFromIndex('morningTests', 'by-timestamp');
+    return tests.reverse(); // Most recent first
+}
+
+/**
+ * Retrieves a specific morning test by ID.
+ * @param id - The test ID to retrieve
+ * @returns The test result if found, undefined otherwise
+ */
+export async function getMorningTest(id: string): Promise<MorningTestResult | undefined> {
+    const db = await getDB();
+    return db.get('morningTests', id);
+}
+
+/**
+ * Deletes a morning test from the database.
+ * @param id - The test ID to delete
+ */
+export async function deleteMorningTest(id: string): Promise<void> {
+    const db = await getDB();
+    await db.delete('morningTests', id);
 }
 
 // Settings Operations
