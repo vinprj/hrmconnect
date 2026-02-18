@@ -309,7 +309,7 @@ function App() {
             </div>
 
             {isConnected && (
-              <div className="flex gap-2" style={{ marginRight: 'auto', paddingLeft: '1rem' }}>
+              <div className="header-btn-group">
                 <button
                   onClick={saveAndDisconnect}
                   className="save-session-btn flex gap-2"
