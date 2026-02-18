@@ -174,7 +174,10 @@ export const ZoneIndicator = memo(function ZoneIndicator({ currentHR, age, onAge
                             min="10"
                             max="100"
                             value={age}
-                            onChange={(e) => onAgeChange(parseInt(e.target.value, 10) || 30)}
+                            onChange={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                if (!isNaN(val) && val >= 10 && val <= 100) onAgeChange(val);
+                            }}
                             className="no-drag"
                             style={{
                                 width: '56px',

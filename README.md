@@ -1,40 +1,71 @@
 # HRM Connect
 
-A modern web application for Heart Rate Variability (HRV) monitoring and biofeedback training.
+> Real-time heart rate variability monitoring and biofeedback training in your browser.
+
+<!-- screenshot -->
 
 ## Features
 
-- **Real-time HRV Monitoring**: Connects to Bluetooth heart rate monitors to visualize HRV in real-time.
-- **Resonance Frequency Breathing**: Guided breathing exercises to help you reach your resonance frequency.
-- **Biofeedback**: Visual and auditory feedback to optimize your breathing and HRV.
-- **Session Tracking**: Record and review your sessions to track progress over time.
-- **Advanced Analytics**: Poincare plots, frequency analysis, and stress metrics.
+- **Real-time HRV monitoring** — live SDNN, RMSSD, and pNN50 from RR intervals
+- **Stress gauge** — Baevsky stress index visualised as an animated gauge
+- **Frequency analysis** — LF/HF power bands and LF/HF ratio via FFT
+- **Poincaré plot** — scatter plot of successive RR intervals for ANS assessment
+- **Breathing guide** — paced resonance-frequency breathing pacer (5–6 BPM)
+- **Estimated respiration rate** — derived from RR interval oscillations
+- **Heart rate zones** — age-adjusted zone indicator updated in real time
+- **Morning readiness test** — guided HRV measurement for daily readiness scoring
+- **Session history** — past sessions stored locally; review stats and trends
+- **Draggable dashboard** — fully resizable, rearrangeable grid layout per breakpoint
+- **Dark / light theme** — persisted across sessions
+- **Battery level** — reads monitor battery via BLE Battery Service
 
 ## Tech Stack
 
-- **Framework**: React + TypeScript + Vite
-- **Styling**: Vanilla CSS with a focus on modern, responsive design.
-- **Bluetooth**: Web Bluetooth API for device connectivity.
-- **Charting**: Recharts for data visualization.
+| Layer | Library / API |
+|---|---|
+| UI framework | React 19 + TypeScript |
+| Build tool | Vite 7 |
+| Charts | Recharts 3 |
+| Animation | Framer Motion 12 |
+| Dashboard grid | react-grid-layout |
+| Bluetooth | Web Bluetooth API |
+| Local storage | IndexedDB via `idb` |
+| FFT | fft.js |
 
 ## Getting Started
 
-1.  **Install Dependencies**:
-    ```bash
-    npm install
-    ```
+```bash
+# Install dependencies
+npm install
 
-2.  **Run Development Server**:
-    ```bash
-    npm run dev
-    ```
+# Start development server
+npm run dev
 
-3.  **Build for Production**:
-    ```bash
-    npm run build
-    ```
+# Production build
+npm run build
 
-## Requirements
+# Run tests
+npm test
+```
 
-- A Bluetooth Low Energy (BLE) heart rate monitor (e.g., Polar H10).
-- A browser that supports the Web Bluetooth API (Chrome, Edge, etc.).
+## Browser Requirements
+
+The Web Bluetooth API is required. Supported browsers:
+
+- **Google Chrome** 56+ (desktop)
+- **Microsoft Edge** 79+ (desktop)
+
+> Firefox and Safari do not support Web Bluetooth.  
+> The page must be served over **HTTPS** or **localhost** — Web Bluetooth is blocked on plain HTTP.
+
+## Compatible Devices
+
+Any Bluetooth Low Energy heart rate monitor that exposes the standard **Heart Rate** GATT service works. Tested with:
+
+- **Polar H10** — recommended; provides full RR interval data required for HRV analysis
+
+Other devices (Polar H9, Wahoo TICKR, Garmin HRM-Pro, etc.) should work for basic HR; RR interval availability varies by device.
+
+## License
+
+MIT — see [LICENSE](LICENSE)

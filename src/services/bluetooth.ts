@@ -1,3 +1,5 @@
+import { logger } from '../utils/logger';
+
 /**
  * Heart rate data received from a Bluetooth heart rate monitor.
  * Follows the Bluetooth Heart Rate Measurement characteristic specification.
@@ -84,7 +86,7 @@ export class BluetoothService {
    */
   async connect() {
     try {
-      console.log('Requesting Bluetooth Device...');
+      logger.debug('Requesting Bluetooth Device...');
 
       if (!navigator.bluetooth) {
         throw new Error('Web Bluetooth is not supported in this browser. Please use Chrome, Edge, or Opera.');
@@ -102,26 +104,26 @@ export class BluetoothService {
 
       this.device.addEventListener('gattserverdisconnected', this.handleDisconnect);
 
-      console.log('Connecting to GATT Server...');
+      logger.debug('Connecting to GATT Server...');
       if (!this.device.gatt) {
         throw new Error('GATT server not available on this device');
       }
       this.server = await this.device.gatt.connect();
 
       // Heart Rate Service
-      console.log('Getting Heart Rate Service...');
+      logger.debug('Getting Heart Rate Service...');
       this.service = await this.server.getPrimaryService(HR_SERVICE_UUID);
 
-      console.log('Getting Heart Rate Characteristic...');
+      logger.debug('Getting Heart Rate Characteristic...');
       this.characteristic = await this.service.getCharacteristic(HR_CHARACTERISTIC_UUID);
 
-      console.log('Starting Notifications...');
+      logger.debug('Starting Notifications...');
       await this.characteristic.startNotifications();
       this.characteristic.addEventListener('characteristicvaluechanged', this.handleNotifications);
 
       // Battery Service (Optional)
       try {
-        console.log('Getting Battery Service...');
+        logger.debug('Getting Battery Service...');
         const batteryService = await this.server.getPrimaryService(BATTERY_SERVICE_UUID);
         const batteryChar = await batteryService.getCharacteristic(BATTERY_LEVEL_CHARACTERISTIC_UUID);
 
@@ -138,12 +140,12 @@ export class BluetoothService {
         await batteryChar.startNotifications();
         batteryChar.addEventListener('characteristicvaluechanged', this.handleBatteryNotification);
       } catch (e) {
-        console.warn('Battery service not available', e);
+        logger.warn('Battery service not available', e);
       }
 
-      console.log('Connected!');
+      logger.debug('Connected!');
     } catch (error) {
-      console.error('Connection failed', error);
+      logger.error('Connection failed', error);
       throw error;
     }
   }
@@ -176,7 +178,7 @@ export class BluetoothService {
   }
 
   private handleDisconnect = () => {
-    console.log('Device disconnected');
+    logger.debug('Device disconnected');
     this.onDisconnected();
   }
 

@@ -15,9 +15,11 @@ import { SessionHistory } from './components/SessionHistory'
 import { BreathingGuide } from './components/BreathingGuide'
 import { ReadinessCard } from './components/ReadinessCard'
 import { saveSession } from './services/storage'
-import { Activity, Timer, AlertTriangle, RotateCcw, Power, Battery, Sun, Moon, HelpCircle, History, Save, Sunrise } from 'lucide-react'
+import { Activity, Timer, AlertTriangle, RotateCcw, Power, Battery, Sun, Moon, HelpCircle, History, Save, Sunrise, BarChart3 } from 'lucide-react'
 import { MorningTest } from './components/MorningTest'
 import { ZoneIndicator } from './components/ZoneIndicator'
+import { RecoveryScore } from './components/RecoveryScore'
+import { TrendsDashboard } from './components/TrendsDashboard'
 import { DEFAULT_AGE } from './utils/zones'
 import { motion } from 'framer-motion'
 import 'react-grid-layout/css/styles.css'
@@ -57,6 +59,7 @@ const DEFAULT_LAYOUT = [
   { i: 'respiration', x: 0, y: 8, w: 4, h: 3, minW: 3, minH: 3 },
   { i: 'breathing', x: 4, y: 8, w: 4, h: 3, minW: 3, minH: 3 },
   { i: 'readiness', x: 8, y: 10, w: 4, h: 3, minW: 3, minH: 3 },
+  { i: 'recovery', x: 0, y: 11, w: 4, h: 4, minW: 3, minH: 3 },
 ]
 
 function App() {
@@ -82,6 +85,7 @@ function App() {
   const [isTutorialOpen, setIsTutorialOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [isMorningTestOpen, setIsMorningTestOpen] = useState(false)
+  const [isTrendsOpen, setIsTrendsOpen] = useState(false)
   const [sessionStartTime, setSessionStartTime] = useState<number>(0)
   const [hrDataWithTimestamp, setHrDataWithTimestamp] = useState<{ time: number; hr: number }[]>([])
   const [userAge, setUserAge] = useState<number>(() => {
@@ -228,6 +232,8 @@ function App() {
   const closeHistory = useCallback(() => setIsHistoryOpen(false), [])
   const openMorningTest = useCallback(() => setIsMorningTestOpen(true), [])
   const closeMorningTest = useCallback(() => setIsMorningTestOpen(false), [])
+  const openTrends = useCallback(() => setIsTrendsOpen(true), [])
+  const closeTrends = useCallback(() => setIsTrendsOpen(false), [])
   const saveAndDisconnect = useCallback(() => disconnect(true), [disconnect])
   const endWithoutSave = useCallback(() => disconnect(false), [disconnect])
 
@@ -292,6 +298,9 @@ function App() {
             )}
 
             <div className="header-actions">
+              <button onClick={openTrends} className="icon-btn" title="HRV Trends">
+                <BarChart3 size={20} />
+              </button>
               <button onClick={openMorningTest} className="icon-btn" title="Morning Readiness Test">
                 <Sunrise size={20} />
               </button>
@@ -318,6 +327,7 @@ function App() {
         isConnected={isConnected}
         onConnect={connect}
       />
+      <TrendsDashboard isOpen={isTrendsOpen} onClose={closeTrends} />
 
       {
         error && (
@@ -531,6 +541,10 @@ function App() {
 
               <div key="readiness" className="drag-handle" style={{ cursor: 'move', height: '100%' }}>
                 <ReadinessCard stats={stats} advancedStats={advancedStats} />
+              </div>
+
+              <div key="recovery" className="drag-handle" style={{ cursor: 'move', height: '100%' }}>
+                <RecoveryScore />
               </div>
             </ResponsiveGridLayout>
 
