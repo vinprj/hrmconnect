@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react'
 import { Responsive, WidthProvider, type Layout, type Layouts } from 'react-grid-layout'
 const ResponsiveGridLayout = WidthProvider(Responsive)
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -7,24 +7,33 @@ import { StatsCalculator, type SessionStats } from './utils/stats'
 import { AdvancedStatsCalculator, type AdvancedStats } from './utils/advancedStats'
 import { StatCard } from './components/StatCard'
 import { StressGauge } from './components/StressGauge'
-import { FrequencyCard } from './components/FrequencyCard'
-import { PoincarePlot } from './components/PoincarePlot'
-import { RespirationCard } from './components/RespirationCard'
-import { TutorialModal } from './components/TutorialModal'
-import { SessionHistory } from './components/SessionHistory'
-import { BreathingGuide } from './components/BreathingGuide'
-import { ReadinessCard } from './components/ReadinessCard'
+import { RecoveryScore } from './components/RecoveryScore'
 import { saveSession } from './services/storage'
 import { Activity, Timer, AlertTriangle, RotateCcw, Power, Battery, Sun, Moon, HelpCircle, History, Save, Sunrise, BarChart3 } from 'lucide-react'
 import { MorningTest } from './components/MorningTest'
 import { ZoneIndicator } from './components/ZoneIndicator'
-import { RecoveryScore } from './components/RecoveryScore'
-import { TrendsDashboard } from './components/TrendsDashboard'
 import { DEFAULT_AGE } from './utils/zones'
 import { motion } from 'framer-motion'
 import 'react-grid-layout/css/styles.css'
 import 'react-resizable/css/styles.css'
 import './index.css'
+
+// Lazy load heavy components for code splitting
+const PoincarePlot = lazy(() => import('./components/PoincarePlot').then(m => ({ default: m.PoincarePlot })))
+const FrequencyCard = lazy(() => import('./components/FrequencyCard').then(m => ({ default: m.FrequencyCard })))
+const RespirationCard = lazy(() => import('./components/RespirationCard').then(m => ({ default: m.RespirationCard })))
+const BreathingGuide = lazy(() => import('./components/BreathingGuide').then(m => ({ default: m.BreathingGuide })))
+const SessionHistory = lazy(() => import('./components/SessionHistory').then(m => ({ default: m.SessionHistory })))
+const ReadinessCard = lazy(() => import('./components/ReadinessCard').then(m => ({ default: m.ReadinessCard })))
+const TrendsDashboard = lazy(() => import('./components/TrendsDashboard').then(m => ({ default: m.TrendsDashboard })))
+const TutorialModal = lazy(() => import('./components/TutorialModal').then(m => ({ default: m.TutorialModal })))
+
+// Loading fallback
+const ComponentLoader = () => (
+  <div className="flex items-center justify-center h-full min-h-[100px]">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-current"></div>
+  </div>
+)
 
 // Safe localStorage parsing helpers
 function safeParseJSON<T>(json: string | null, fallback: T): T {
@@ -62,6 +71,23 @@ const DEFAULT_LAYOUT = [
   { i: 'recovery', x: 0, y: 11, w: 4, h: 4, minW: 3, minH: 3 },
 ]
 
+// Mobile layout - single column
+const MOBILE_LAYOUT = [
+  { i: 'hr-display', x: 0, y: 0, w: 12, h: 2 },
+  { i: 'chart', x: 0, y: 2, w: 12, h: 4 },
+  { i: 'sdnn', x: 0, y: 4, w: 6, h: 2 },
+  { i: 'rmssd', x: 6, y: 4, w: 6, h: 2 },
+  { i: 'pnn50', x: 0, y: 5, w: 6, h: 2 },
+  { i: 'lfhf', x: 6, y: 5, w: 6, h: 2 },
+  { i: 'stress', x: 0, y: 6, w: 12, h: 3 },
+  { i: 'frequency', x: 0, y: 7, w: 12, h: 3 },
+  { i: 'poincare', x: 0, y: 8, w: 12, h: 4 },
+  { i: 'respiration', x: 0, y: 9, w: 12, h: 3 },
+  { i: 'breathing', x: 0, y: 10, w: 12, h: 3 },
+  { i: 'readiness', x: 0, y: 11, w: 12, h: 3 },
+  { i: 'recovery', x: 0, y: 12, w: 12, h: 4 },
+]
+
 function App() {
   const [isConnected, setIsConnected] = useState(false)
   const [currentHr, setCurrentHr] = useState<number>(0)
@@ -77,7 +103,13 @@ function App() {
   const [error, setError] = useState<string | null>(null)
   const [layouts, setLayouts] = useState<Layouts>(() => {
     const saved = localStorage.getItem('dashboard-layouts')
-    return safeParseJSON(saved, { lg: DEFAULT_LAYOUT })
+    const parsed = safeParseJSON(saved, { lg: DEFAULT_LAYOUT, md: MOBILE_LAYOUT, sm: MOBILE_LAYOUT, xs: MOBILE_LAYOUT, xxs: MOBILE_LAYOUT })
+    // Ensure mobile layouts exist
+    if (!parsed.md) parsed.md = MOBILE_LAYOUT
+    if (!parsed.sm) parsed.sm = MOBILE_LAYOUT
+    if (!parsed.xs) parsed.xs = MOBILE_LAYOUT
+    if (!parsed.xxs) parsed.xxs = MOBILE_LAYOUT
+    return parsed
   })
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('theme') as 'dark' | 'light') || 'dark'
@@ -319,7 +351,7 @@ function App() {
       </header>
 
       <TutorialModal isOpen={isTutorialOpen} onClose={closeTutorial} />
-      <SessionHistory isOpen={isHistoryOpen} onClose={closeHistory} />
+      <Suspense fallback={null}><SessionHistory isOpen={isHistoryOpen} onClose={closeHistory} /></Suspense>
       <MorningTest
         isOpen={isMorningTestOpen}
         onClose={closeMorningTest}
@@ -524,23 +556,23 @@ function App() {
               </div>
 
               <div key="frequency" className="drag-handle" style={{ cursor: 'move', height: '100%' }}>
-                <FrequencyCard lf={advancedStats.lf} hf={advancedStats.hf} />
+                <Suspense fallback={<ComponentLoader />}><FrequencyCard lf={advancedStats.lf} hf={advancedStats.hf} /></Suspense>
               </div>
 
               <div key="poincare" className="drag-handle" style={{ cursor: 'move', height: '100%' }}>
-                <PoincarePlot rrIntervals={rrHistory} />
+                <Suspense fallback={<ComponentLoader />}><PoincarePlot rrIntervals={rrHistory} /></Suspense>
               </div>
 
               <div key="respiration" className="drag-handle" style={{ cursor: 'move', height: '100%' }}>
-                <RespirationCard rate={advancedStats.respirationRate} />
+                <Suspense fallback={<ComponentLoader />}><RespirationCard rate={advancedStats.respirationRate} /></Suspense>
               </div>
 
               <div key="breathing" className="glass-card drag-handle" style={{ cursor: 'move', height: '100%' }}>
-                <BreathingGuide />
+                <Suspense fallback={<ComponentLoader />}><BreathingGuide /></Suspense>
               </div>
 
               <div key="readiness" className="drag-handle" style={{ cursor: 'move', height: '100%' }}>
-                <ReadinessCard stats={stats} advancedStats={advancedStats} />
+                <Suspense fallback={<ComponentLoader />}><ReadinessCard stats={stats} advancedStats={advancedStats} /></Suspense>
               </div>
 
               <div key="recovery" className="drag-handle" style={{ cursor: 'move', height: '100%' }}>

@@ -13,6 +13,18 @@ export default defineConfig({
       'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
     }
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'recharts': ['recharts'],
+          'framer': ['framer-motion'],
+          'grid': ['react-grid-layout'],
+          'utils': ['fft.js', 'idb', 'clsx', 'tailwind-merge'],
+        },
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

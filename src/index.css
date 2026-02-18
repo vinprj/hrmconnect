@@ -822,3 +822,67 @@ h1 {
     font-size: 1rem;
   }
 }
+
+/* Mobile Touch Targets - 44px minimum */
+@media (max-width: 768px) {
+  button, 
+  .btn,
+  input[type="checkbox"],
+  .glass-card button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Smaller padding on mobile */
+  .glass-card {
+    padding: 0.75rem;
+  }
+  
+  /* Responsive grid - single column on mobile */
+  .react-grid-layout {
+    width: 100% !important;
+  }
+  
+  .react-grid-item {
+    margin-bottom: 8px;
+  }
+  
+  /* Header adjustments */
+  .header-actions {
+    gap: 0.5rem;
+  }
+  
+  .header-actions button {
+    padding: 0.5rem;
+  }
+  
+  /* Stats cards smaller */
+  .stat-card {
+    padding: 0.5rem;
+  }
+  
+  .stat-card h3 {
+    font-size: 0.75rem;
+  }
+  
+  .stat-card .value {
+    font-size: 1.25rem;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  .app-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+  }
+  
+  .connection-status {
+    font-size: 0.75rem;
+  }
+  
+  .hr-display .value {
+    font-size: 3rem !important;
+  }
+}

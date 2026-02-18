@@ -26,3 +26,4 @@ dist-ssr
 # AI / Editor tool configs
 .claude/
 .cursor/
+.vercel
